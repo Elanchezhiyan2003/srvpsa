@@ -3,9 +3,12 @@ import { Copy, Edit, Plus, Trash2 } from "lucide-react";
 import { DataTable } from "@/components/data-table";
 import { PageHeader } from "@/components/page-header";
 import { Badge, Button, SearchBar, Select, Tabs } from "@/components/ui";
-import { exams } from "@/lib/data";
+import { getExams } from "@/lib/data";
+import { examStatusLabel } from "@/lib/auth";
 
-export default function ExamListPage() {
+export default async function ExamListPage() {
+  const exams = await getExams();
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -38,10 +41,10 @@ export default function ExamListPage() {
         rows={exams.slice(0, 12)}
         columns={[
           { key: "name", header: "Exam Name" },
-          { key: "questions", header: "Questions" },
-          { key: "duration", header: "Duration", render: (row) => `${row.duration} min` },
-          { key: "totalMarks", header: "Marks" },
-          { key: "status", header: "Status", render: (row) => <Badge>{row.status}</Badge> },
+          { key: "questions_count", header: "Questions" },
+          { key: "duration_minutes", header: "Duration", render: (row) => `${row.duration_minutes} min` },
+          { key: "total_marks", header: "Marks" },
+          { key: "status", header: "Status", render: (row) => <Badge>{examStatusLabel[row.status]}</Badge> },
           {
             key: "actions",
             header: "Actions",

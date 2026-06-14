@@ -4,10 +4,21 @@ import { DataTable } from "@/components/data-table";
 import { PageHeader } from "@/components/page-header";
 import { StatsCard } from "@/components/stats-card";
 import { Badge, Card, CardContent, CardHeader, CardTitle } from "@/components/ui";
-import { currentStudentResults, subjectPerformance } from "@/lib/data";
+import { getCurrentStudent, getStudentResults, getSubjectPerformance } from "@/lib/data";
 
-export default function StudentResultPage() {
-  const latest = currentStudentResults[0] ?? {
+export default async function StudentResultPage() {
+  const student = await getCurrentStudent();
+
+  if (!student) {
+    return <div>Student not found</div>;
+  }
+
+  const [studentResults, subjectPerformance] = await Promise.all([
+    getStudentResults(student.student_id),
+    getSubjectPerformance()
+  ]);
+
+  const latest = studentResults[0] ?? {
     score: 62,
     percentage: 76,
     result: "Passed",
@@ -52,9 +63,9 @@ export default function StudentResultPage() {
         </ChartPanel>
       </section>
       <DataTable
-        rows={currentStudentResults}
+        rows={studentResults}
         columns={[
-          { key: "examName", header: "Exam" },
+          { key: "exam_name", header: "Exam" },
           { key: "score", header: "Score" },
           { key: "percentage", header: "Percentage", render: (row) => `${row.percentage}%` },
           { key: "rank", header: "Rank", render: (row) => `#${row.rank}` },

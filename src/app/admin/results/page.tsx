@@ -9,13 +9,19 @@ import { PageHeader } from "@/components/page-header";
 import { StatsCard } from "@/components/stats-card";
 import { Badge, Button, SearchBar, Select } from "@/components/ui";
 import {
-  adminMetrics,
-  batchPerformance,
-  performanceDistribution,
-  results
+  getResults,
+  getAdminMetrics,
+  getBatchPerformance,
+  performanceDistribution
 } from "@/lib/data";
 
-export default function ResultsDashboardPage() {
+export default async function ResultsDashboardPage() {
+  const [results, adminMetrics, batchPerformance] = await Promise.all([
+    getResults(),
+    getAdminMetrics(),
+    getBatchPerformance()
+  ]);
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -58,7 +64,7 @@ export default function ResultsDashboardPage() {
       <DataTable
         rows={results.slice(0, 12)}
         columns={[
-          { key: "studentName", header: "Student Name" },
+          { key: "student_name", header: "Student Name" },
           { key: "score", header: "Score" },
           { key: "percentage", header: "Percentage", render: (row) => `${row.percentage}%` },
           { key: "rank", header: "Rank", render: (row) => `#${row.rank}` },

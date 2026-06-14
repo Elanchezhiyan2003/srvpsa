@@ -4,9 +4,14 @@ import { CsvUploadPreview } from "@/components/forms/student-form";
 import { DataTable } from "@/components/data-table";
 import { PageHeader } from "@/components/page-header";
 import { Badge, Button, SearchBar, Select } from "@/components/ui";
-import { batches, students } from "@/lib/data";
+import { getBatches, getStudents } from "@/lib/data";
 
-export default function StudentManagementPage() {
+export default async function StudentManagementPage() {
+  const [batches, students] = await Promise.all([
+    getBatches(),
+    getStudents()
+  ]);
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -46,11 +51,11 @@ export default function StudentManagementPage() {
           <DataTable
             rows={students.slice(0, 12)}
             columns={[
-              { key: "fullName", header: "Student Name" },
+              { key: "full_name", header: "Student Name" },
               { key: "email", header: "Email" },
               { key: "mobile", header: "Mobile" },
-              { key: "batchName", header: "Batch" },
-              { key: "status", header: "Status", render: (row) => <Badge>{row.status}</Badge> },
+              { key: "batch_name", header: "Batch" },
+              { key: "is_active", header: "Status", render: (row) => <Badge>{row.is_active ? "Active" : "Inactive"}</Badge> },
               {
                 key: "quick",
                 header: "Actions",

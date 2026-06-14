@@ -1,22 +1,39 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { CheckCircle2, Send } from "lucide-react";
 import { Badge, Button, Card, CardContent, CardHeader, CardTitle, Modal, Select } from "@/components/ui";
-import { batches, exams } from "@/lib/data";
+import { createClient } from "@/lib/supabase/client";
+import type { Batch, Exam } from "@/lib/types";
 
 export function AssignmentWizard() {
   const [step, setStep] = useState(1);
   const [success, setSuccess] = useState(false);
-  const selectedExam = exams[1];
-  const selectedBatch = batches[2];
+  const [batches, setBatches] = useState<Batch[]>([]);
+  const [exams, setExams] = useState<Exam[]>([]);
+
+  useEffect(() => {
+    async function loadData() {
+      const supabase = createClient();
+      const [batchRes, examRes] = await Promise.all([
+        supabase.from("batches").select("*").order("created_at"),
+        supabase.from("exams").select("*").order("created_at").limit(10)
+      ]);
+      if (batchRes.data) setBatches(batchRes.data as Batch[]);
+      if (examRes.data) setExams(examRes.data as Exam[]);
+    }
+    loadData();
+  }, []);
+
+  const selectedExam = exams[1] ?? null;
+  const selectedBatch = batches[2] ?? null;
   const examOptions = useMemo(
-    () => exams.slice(0, 10).map((exam) => ({ label: exam.name, value: exam.id })),
-    []
+    () => exams.map((exam) => ({ label: exam.name, value: exam.id })),
+    [exams]
   );
   const batchOptions = useMemo(
     () => batches.map((batch) => ({ label: batch.name, value: batch.id })),
-    []
+    [batches]
   );
 
   return (
@@ -41,15 +58,15 @@ export function AssignmentWizard() {
           <CardTitle>{step === 1 ? "Select Exam" : step === 2 ? "Select Batch" : "Review Assignment"}</CardTitle>
         </CardHeader>
         <CardContent>
-          {step === 1 ? <Select label="Exam" options={examOptions} defaultValue={selectedExam.id} /> : null}
-          {step === 2 ? <Select label="Batch" options={batchOptions} defaultValue={selectedBatch.id} /> : null}
-          {step === 3 ? (
+          {step === 1 && selectedExam ? <Select label="Exam" options={examOptions} defaultValue={selectedExam.id} /> : null}
+          {step === 2 && selectedBatch ? <Select label="Batch" options={batchOptions} defaultValue={selectedBatch.id} /> : null}
+          {step === 3 && selectedExam && selectedBatch ? (
             <div className="grid gap-4 lg:grid-cols-3">
               <div className="rounded-card border border-neutral-200 p-4">
                 <p className="text-xs font-black uppercase text-neutral-400">Exam Summary</p>
                 <p className="mt-2 font-bold text-neutral-900">{selectedExam.name}</p>
                 <p className="mt-1 text-sm text-neutral-500">
-                  {selectedExam.questions} questions, {selectedExam.duration} minutes, {selectedExam.totalMarks} marks
+                  {selectedExam.questions_count} questions, {selectedExam.duration_minutes} minutes, {selectedExam.total_marks} marks
                 </p>
               </div>
               <div className="rounded-card border border-neutral-200 p-4">
@@ -87,10 +104,12 @@ export function AssignmentWizard() {
       <Modal title="Exam Assigned Successfully" open={success}>
         <div className="text-center">
           <CheckCircle2 className="mx-auto h-12 w-12 text-success" />
-          <p className="mt-4 font-bold text-neutral-900">{selectedExam.name}</p>
-          <p className="mt-2 text-sm text-neutral-500">
-            The exam is now visible to {selectedBatch.studentsCount} students in {selectedBatch.name}.
-          </p>
+          {selectedExam ? <p className="mt-4 font-bold text-neutral-900">{selectedExam.name}</p> : null}
+          {selectedBatch ? (
+            <p className="mt-2 text-sm text-neutral-500">
+              The exam is now visible to {selectedBatch.studentsCount} students in {selectedBatch.name}.
+            </p>
+          ) : null}
         </div>
       </Modal>
     </div>

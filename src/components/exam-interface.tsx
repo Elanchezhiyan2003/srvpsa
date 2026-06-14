@@ -12,13 +12,22 @@ import {
   Send,
   Wifi
 } from "lucide-react";
-import { activeExam, activeExamQuestions } from "@/lib/data";
+import { createClient } from "@/lib/supabase/client";
 import { useExamStore } from "@/store/use-exam-store";
 import { Badge, Button, Card, CardContent } from "@/components/ui";
 import { cn } from "@/lib/utils";
+import type { Exam, Question, QuestionOption } from "@/lib/types";
+import { questionTypeLabel } from "@/lib/auth";
+
+interface ExamQuestion extends Question {
+  options: QuestionOption[];
+}
 
 export function ExamInterface() {
-  const [secondsLeft, setSecondsLeft] = useState(activeExam.duration * 60);
+  const [exam, setExam] = useState<Exam | null>(null);
+  const [questions, setQuestions] = useState<ExamQuestion[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [secondsLeft, setSecondsLeft] = useState(0);
   const {
     currentQuestion,
     setCurrentQuestion,
@@ -27,14 +36,63 @@ export function ExamInterface() {
     markForReview,
     autoSavedAt
   } = useExamStore();
-  const question = activeExamQuestions[currentQuestion];
+  const question = questions[currentQuestion];
 
   useEffect(() => {
+    async function loadExam() {
+      const supabase = createClient();
+      const { data: examData } = await supabase
+        .from("exams")
+        .select("*")
+        .eq("status", "ACTIVE")
+        .limit(1)
+        .maybeSingle();
+
+      if (examData) {
+        setExam(examData as unknown as Exam);
+        setSecondsLeft(examData.duration_minutes * 60);
+
+        const { data: questionData } = await supabase
+          .from("questions")
+          .select("*, options(*)")
+          .eq("exam_id", examData.id)
+          .order("sort_order")
+          .limit(15);
+
+        if (questionData) {
+          setQuestions(
+            questionData.map((q: Record<string, unknown>) => ({
+              id: q.id as string,
+              exam_id: q.exam_id as string,
+              type: q.type as Question["type"],
+              subject: q.subject as string,
+              prompt: q.prompt as string,
+              options: ((q.options as QuestionOption[]) ?? []).map((o) => ({
+                id: o.id,
+                label: o.label,
+                value: o.value,
+                is_correct: o.is_correct
+              })),
+              correctAnswer: ((q.options as QuestionOption[]) ?? []).filter((o) => o.is_correct).map((o) => o.id),
+              marks: q.marks as number,
+              explanation: q.explanation as string | null,
+              sort_order: q.sort_order as number
+            }))
+          );
+        }
+      }
+      setLoading(false);
+    }
+    loadExam();
+  }, []);
+
+  useEffect(() => {
+    if (secondsLeft <= 0) return;
     const timer = window.setInterval(() => {
       setSecondsLeft((value) => Math.max(value - 1, 0));
     }, 1000);
     return () => window.clearInterval(timer);
-  }, []);
+  }, [secondsLeft]);
 
   const timeLabel = useMemo(() => {
     const minutes = Math.floor(secondsLeft / 60);
@@ -45,13 +103,29 @@ export function ExamInterface() {
   const answeredCount = Object.values(answers).filter((answer) => answer.selected.length > 0).length;
   const reviewCount = Object.values(answers).filter((answer) => answer.markedForReview).length;
 
+  if (loading) {
+    return (
+      <div className="grid min-h-screen place-items-center bg-neutral-50">
+        <p className="text-lg font-bold text-neutral-500">Loading exam...</p>
+      </div>
+    );
+  }
+
+  if (!exam || !question) {
+    return (
+      <div className="grid min-h-screen place-items-center bg-neutral-50">
+        <p className="text-lg font-bold text-neutral-500">No active exam found.</p>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-neutral-50">
       <header className="sticky top-0 z-20 border-b border-neutral-200 bg-white/95 px-4 py-3 backdrop-blur">
         <div className="mx-auto flex max-w-[1500px] flex-wrap items-center justify-between gap-3">
           <div>
             <p className="text-sm font-semibold text-neutral-500">Online Exam Interface</p>
-            <h1 className="text-lg font-black text-neutral-900">{activeExam.name}</h1>
+            <h1 className="text-lg font-black text-neutral-900">{exam.name}</h1>
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <Badge tone="danger">Timer {timeLabel}</Badge>
@@ -77,9 +151,9 @@ export function ExamInterface() {
             <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
               <div>
                 <p className="text-sm font-bold text-primary">Question {currentQuestion + 1}</p>
-                <p className="mt-1 text-sm text-neutral-500">{question.subject} · {question.type} · {question.marks} marks</p>
+                <p className="mt-1 text-sm text-neutral-500">{question.subject} · {questionTypeLabel[question.type] ?? question.type} · {question.marks} marks</p>
               </div>
-              <Badge>{question.type}</Badge>
+              <Badge>{questionTypeLabel[question.type] ?? question.type}</Badge>
             </div>
             <h2 className="text-xl font-bold leading-8 text-neutral-900">{question.prompt}</h2>
             <div className="mt-6 grid gap-3">
@@ -123,7 +197,7 @@ export function ExamInterface() {
                 </Button>
                 <Button
                   onClick={() =>
-                    setCurrentQuestion(Math.min(currentQuestion + 1, activeExamQuestions.length - 1))
+                    setCurrentQuestion(Math.min(currentQuestion + 1, questions.length - 1))
                   }
                 >
                   Save & Next
@@ -150,7 +224,7 @@ export function ExamInterface() {
                 </div>
                 <div className="rounded-card bg-neutral-100 p-3">
                   <p className="text-xl font-black text-neutral-700">
-                    {activeExamQuestions.length - answeredCount}
+                    {questions.length - answeredCount}
                   </p>
                   <p className="text-xs font-bold text-neutral-500">Not Answered</p>
                 </div>
@@ -165,7 +239,7 @@ export function ExamInterface() {
             <CardContent className="p-5">
               <p className="mb-4 font-bold text-neutral-900">Question Navigator</p>
               <div className="grid grid-cols-5 gap-2">
-                {activeExamQuestions.map((item, index) => {
+                {questions.map((item, index) => {
                   const answer = answers[item.id];
                   const tone = answer?.markedForReview
                     ? "bg-amber-100 text-amber-700"

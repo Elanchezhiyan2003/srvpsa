@@ -3,10 +3,13 @@ import { Edit, Eye, Filter, Plus, Trash2 } from "lucide-react";
 import { DataTable } from "@/components/data-table";
 import { PageHeader } from "@/components/page-header";
 import { Badge, Button, EmptyState, SearchBar, Select } from "@/components/ui";
-import { batches } from "@/lib/data";
+import { getBatches } from "@/lib/data";
+import { batchStatusLabel } from "@/lib/auth";
 import { formatDate } from "@/lib/utils";
 
-export default function BatchListPage() {
+export default async function BatchListPage() {
+  const batches = await getBatches();
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -43,9 +46,9 @@ export default function BatchListPage() {
         columns={[
           { key: "name", header: "Batch Name" },
           { key: "studentsCount", header: "Students Count" },
-          { key: "startDate", header: "Start Date", render: (row) => formatDate(row.startDate) },
-          { key: "endDate", header: "End Date", render: (row) => formatDate(row.endDate) },
-          { key: "status", header: "Status", render: (row) => <Badge>{row.status}</Badge> },
+          { key: "start_date", header: "Start Date", render: (row) => formatDate(row.start_date) },
+          { key: "end_date", header: "End Date", render: (row) => formatDate(row.end_date) },
+          { key: "status", header: "Status", render: (row) => <Badge>{batchStatusLabel[row.status]}</Badge> },
           {
             key: "actions",
             header: "Quick Actions",

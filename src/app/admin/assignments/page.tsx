@@ -3,10 +3,12 @@ import { AssignmentWizard } from "@/components/forms/assignment-wizard";
 import { DataTable } from "@/components/data-table";
 import { PageHeader } from "@/components/page-header";
 import { Badge } from "@/components/ui";
-import { assignments } from "@/lib/data";
+import { getAssignments } from "@/lib/data";
 import { formatDate } from "@/lib/utils";
 
-export default function AssignmentsPage() {
+export default async function AssignmentsPage() {
+  const assignments = await getAssignments();
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -18,10 +20,10 @@ export default function AssignmentsPage() {
       <DataTable
         rows={assignments}
         columns={[
-          { key: "examName", header: "Exam" },
-          { key: "batchName", header: "Batch" },
-          { key: "studentsCount", header: "Students Count" },
-          { key: "assignedDate", header: "Assigned Date", render: (row) => formatDate(row.assignedDate) },
+          { key: "exam_name", header: "Exam" },
+          { key: "batch_name", header: "Batch" },
+          { key: "students_count", header: "Students Count" },
+          { key: "assigned_date", header: "Assigned Date", render: (row) => formatDate(row.assigned_date) },
           { key: "status", header: "Status", render: (row) => <Badge>{row.status}</Badge> }
         ]}
       />

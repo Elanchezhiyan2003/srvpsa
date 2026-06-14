@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   ArrowDownUp,
@@ -25,12 +25,19 @@ import {
   Textarea,
   Toast
 } from "@/components/ui";
-import { activeExamQuestions } from "@/lib/data";
+import { createClient } from "@/lib/supabase/client";
+import { questionTypeLabel } from "@/lib/auth";
+import type { Question, QuestionOption } from "@/lib/types";
 import { examSchema, type ExamFormInput } from "@/lib/validations";
+
+interface ExamQuestion extends Question {
+  options: QuestionOption[];
+}
 
 export function ExamBuilder() {
   const [activeTab, setActiveTab] = useState("Basic Details");
   const [published, setPublished] = useState(false);
+  const [sampleQuestions, setSampleQuestions] = useState<ExamQuestion[]>([]);
   const form = useForm<ExamFormInput>({
     resolver: zodResolver(examSchema),
     defaultValues: {
@@ -42,6 +49,39 @@ export function ExamBuilder() {
       negativeMarks: 0.25
     }
   });
+
+  useEffect(() => {
+    async function loadQuestions() {
+      const supabase = createClient();
+      const { data } = await supabase
+        .from("questions")
+        .select("*, options(*)")
+        .order("sort_order")
+        .limit(8);
+      if (data) {
+        setSampleQuestions(
+          data.map((q: Record<string, unknown>) => ({
+            id: q.id as string,
+            exam_id: q.exam_id as string,
+            type: q.type as Question["type"],
+            subject: q.subject as string,
+            prompt: q.prompt as string,
+            options: ((q.options as QuestionOption[]) ?? []).map((o) => ({
+              id: o.id,
+              label: o.label,
+              value: o.value,
+              is_correct: o.is_correct
+            })),
+            correctAnswer: ((q.options as QuestionOption[]) ?? []).filter((o) => o.is_correct).map((o) => o.id),
+            marks: q.marks as number,
+            explanation: q.explanation as string | null,
+            sort_order: q.sort_order as number
+          }))
+        );
+      }
+    }
+    loadQuestions();
+  }, []);
 
   return (
     <div className="space-y-5">
@@ -126,13 +166,13 @@ export function ExamBuilder() {
         </Card>
       ) : null}
 
-      {activeTab === "Question Builder" ? <QuestionBuilderPanel /> : null}
-      {activeTab === "Preview" ? <ExamPreview /> : null}
+      {activeTab === "Question Builder" ? <QuestionBuilderPanel questions={sampleQuestions} /> : null}
+      {activeTab === "Preview" ? <ExamPreview questions={sampleQuestions} /> : null}
     </div>
   );
 }
 
-function QuestionBuilderPanel() {
+function QuestionBuilderPanel({ questions }: { questions: ExamQuestion[] }) {
   return (
     <div className="grid gap-5 xl:grid-cols-[1fr_360px]">
       <Card>
@@ -209,14 +249,14 @@ function QuestionBuilderPanel() {
           <CardTitle>Question Set</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
-          {activeExamQuestions.slice(0, 8).map((question, index) => (
+          {questions.slice(0, 8).map((question, index) => (
             <button
               key={question.id}
               className="w-full rounded-card border border-neutral-200 p-3 text-left transition hover:border-primary/40 hover:bg-blue-50"
             >
               <div className="flex items-center justify-between gap-2">
                 <span className="text-sm font-bold text-neutral-900">Q{index + 1}</span>
-                <Badge>{question.type}</Badge>
+                <Badge>{questionTypeLabel[question.type] ?? question.type}</Badge>
               </div>
               <p className="mt-2 line-clamp-2 text-xs leading-5 text-neutral-500">{question.prompt}</p>
             </button>
@@ -227,7 +267,7 @@ function QuestionBuilderPanel() {
   );
 }
 
-function ExamPreview() {
+function ExamPreview({ questions }: { questions: ExamQuestion[] }) {
   return (
     <Card>
       <CardHeader>
@@ -249,11 +289,11 @@ function ExamPreview() {
         </div>
         <Tabs tabs={["All", "MCQ", "MSQ", "True/False"]} active="All" />
         <div className="mt-5 space-y-3">
-          {activeExamQuestions.slice(0, 5).map((question, index) => (
+          {questions.slice(0, 5).map((question, index) => (
             <div key={question.id} className="rounded-card border border-neutral-200 p-4">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <p className="font-bold text-neutral-900">Question {index + 1}</p>
-                <Badge>{question.type}</Badge>
+                <Badge>{questionTypeLabel[question.type] ?? question.type}</Badge>
               </div>
               <p className="mt-2 text-sm leading-6 text-neutral-600">{question.prompt}</p>
               <div className="mt-3 grid gap-2 md:grid-cols-2">

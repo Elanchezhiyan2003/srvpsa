@@ -1,29 +1,42 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { FileSpreadsheet, Save, Upload } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { Button, Card, CardContent, CardHeader, CardTitle, Input, Select, Toast } from "@/components/ui";
-import { batches } from "@/lib/data";
+import { createClient } from "@/lib/supabase/client";
 import { studentSchema, type StudentInput } from "@/lib/validations";
+import type { Batch } from "@/lib/types";
 
 export function StudentForm() {
   const [saved, setSaved] = useState(false);
+  const [batches, setBatches] = useState<Batch[]>([]);
+
+  useEffect(() => {
+    async function loadBatches() {
+      const supabase = createClient();
+      const { data } = await supabase.from("batches").select("*").order("created_at");
+      if (data) setBatches(data as Batch[]);
+    }
+    loadBatches();
+  }, []);
+
   const batchOptions = useMemo(
     () => [
       { label: "Select batch", value: "" },
       ...batches.map((batch) => ({ label: batch.name, value: batch.id }))
     ],
-    []
+    [batches]
   );
+
   const form = useForm<StudentInput>({
     resolver: zodResolver(studentSchema),
     defaultValues: {
       fullName: "Rohini Subramanian",
       email: "rohini.subramanian@tnpsce.academy",
       mobile: "9876543210",
-      batchId: batches[0].id,
+      batchId: batches[0]?.id ?? "",
       password: "Password123"
     }
   });

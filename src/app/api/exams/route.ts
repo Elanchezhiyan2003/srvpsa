@@ -1,9 +1,13 @@
 import { NextResponse } from "next/server";
-import { exams } from "@/lib/data";
+import { createServerSupabaseClient } from "@/lib/supabase/server";
 
-export function GET() {
-  return NextResponse.json({
-    data: exams,
-    total: exams.length
-  });
+export async function GET() {
+  const supabase = await createServerSupabaseClient();
+  const { data, error } = await supabase.from("exams").select("*").order("created_at");
+
+  if (error) {
+    return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
+  }
+
+  return NextResponse.json({ data, total: data?.length ?? 0 });
 }

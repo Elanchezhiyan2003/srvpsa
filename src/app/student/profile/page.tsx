@@ -2,9 +2,17 @@ import { History, LockKeyhole, Save, UserCircle } from "lucide-react";
 import { DataTable } from "@/components/data-table";
 import { PageHeader } from "@/components/page-header";
 import { Badge, Button, Card, CardContent, CardHeader, CardTitle, Input } from "@/components/ui";
-import { currentStudent, currentStudentResults } from "@/lib/data";
+import { getCurrentStudent, getStudentResults } from "@/lib/data";
 
-export default function ProfilePage() {
+export default async function ProfilePage() {
+  const student = await getCurrentStudent();
+
+  if (!student) {
+    return <div>Student not found</div>;
+  }
+
+  const studentResults = await getStudentResults(student.student_id);
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -18,10 +26,10 @@ export default function ProfilePage() {
             <CardTitle>Personal Information</CardTitle>
           </CardHeader>
           <CardContent className="grid gap-4 md:grid-cols-2">
-            <Input label="Full Name" defaultValue={currentStudent.fullName} />
-            <Input label="Email" defaultValue={currentStudent.email} />
-            <Input label="Mobile" defaultValue={currentStudent.mobile} />
-            <Input label="Batch" defaultValue={currentStudent.batchName} />
+            <Input label="Full Name" defaultValue={student.full_name} />
+            <Input label="Email" defaultValue={student.email} />
+            <Input label="Mobile" defaultValue={student.mobile || ""} />
+            <Input label="Batch" defaultValue={student.batch_name} />
             <div className="md:col-span-2">
               <Button>
                 <Save className="h-4 w-4" />
@@ -54,9 +62,9 @@ export default function ProfilePage() {
         </CardHeader>
         <CardContent>
           <DataTable
-            rows={currentStudentResults}
+            rows={studentResults}
             columns={[
-              { key: "examName", header: "Exam" },
+              { key: "exam_name", header: "Exam" },
               { key: "score", header: "Score" },
               { key: "percentage", header: "Percentage", render: (row) => `${row.percentage}%` },
               { key: "rank", header: "Rank", render: (row) => `#${row.rank}` },

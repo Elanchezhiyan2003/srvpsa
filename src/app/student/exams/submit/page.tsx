@@ -1,13 +1,16 @@
 import Link from "next/link";
 import { AlertCircle, CheckCircle2, RotateCcw, Send } from "lucide-react";
-import { activeExamQuestions } from "@/lib/data";
+import { getActiveExam, getActiveExamQuestions } from "@/lib/data";
 import { PageHeader } from "@/components/page-header";
 import { Button, Card, CardContent, CardHeader, CardTitle } from "@/components/ui";
 
-export default function SubmitConfirmationPage() {
+export default async function SubmitConfirmationPage() {
+  const exam = await getActiveExam();
+  const questions = exam ? await getActiveExamQuestions(exam.id) : [];
+
   const answered = 11;
   const review = 3;
-  const unanswered = activeExamQuestions.length - answered;
+  const unanswered = questions.length - answered;
 
   return (
     <div className="space-y-6">

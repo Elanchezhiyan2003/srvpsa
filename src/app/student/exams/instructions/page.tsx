@@ -1,10 +1,16 @@
 import Link from "next/link";
 import { AlertTriangle, Clock, Medal, PlayCircle } from "lucide-react";
-import { activeExam } from "@/lib/data";
+import { getActiveExam } from "@/lib/data";
 import { PageHeader } from "@/components/page-header";
 import { Button, Card, CardContent, CardHeader, CardTitle } from "@/components/ui";
 
-export default function ExamInstructionsPage() {
+export default async function ExamInstructionsPage() {
+  const exam = await getActiveExam();
+
+  if (!exam) {
+    return <div>No active exam found</div>;
+  }
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -15,7 +21,7 @@ export default function ExamInstructionsPage() {
       <div className="grid gap-5 xl:grid-cols-[1fr_360px]">
         <Card>
           <CardHeader>
-            <CardTitle>{activeExam.name}</CardTitle>
+            <CardTitle>{exam.name}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             {[
@@ -47,9 +53,9 @@ export default function ExamInstructionsPage() {
             <CardTitle>Exam Summary</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            <Summary icon={Clock} label="Duration" value={`${activeExam.duration} minutes`} />
-            <Summary icon={Medal} label="Marks" value={`${activeExam.totalMarks} total`} />
-            <Summary icon={AlertTriangle} label="Negative Marks" value={`${activeExam.negativeMarks} per wrong answer`} />
+            <Summary icon={Clock} label="Duration" value={`${exam.duration_minutes} minutes`} />
+            <Summary icon={Medal} label="Marks" value={`${exam.total_marks} total`} />
+            <Summary icon={AlertTriangle} label="Negative Marks" value={`${exam.negative_marks} per wrong answer`} />
           </CardContent>
         </Card>
       </div>
