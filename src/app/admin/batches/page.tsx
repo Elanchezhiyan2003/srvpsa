@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Edit, Eye, Filter, Plus, Trash2 } from "lucide-react";
+import { CreditCard as Edit, Eye, ListFilter as Filter, Plus, Trash2 } from "lucide-react";
 import { DataTable } from "@/components/data-table";
 import { PageHeader } from "@/components/page-header";
 import { Badge, Button, EmptyState, SearchBar, Select } from "@/components/ui";

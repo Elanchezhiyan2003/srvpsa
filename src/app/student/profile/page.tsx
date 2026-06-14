@@ -1,4 +1,4 @@
-import { History, LockKeyhole, Save, UserCircle } from "lucide-react";
+import { History, LockKeyhole, Save, CircleUser as UserCircle } from "lucide-react";
 import { DataTable } from "@/components/data-table";
 import { PageHeader } from "@/components/page-header";
 import { Badge, Button, Card, CardContent, CardHeader, CardTitle, Input } from "@/components/ui";

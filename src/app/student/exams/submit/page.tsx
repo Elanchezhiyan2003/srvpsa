@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { AlertCircle, CheckCircle2, RotateCcw, Send } from "lucide-react";
+import { CircleAlert as AlertCircle, CircleCheck as CheckCircle2, RotateCcw, Send } from "lucide-react";
 import { getActiveExam, getActiveExamQuestions } from "@/lib/data";
 import { PageHeader } from "@/components/page-header";
 import { Button, Card, CardContent, CardHeader, CardTitle } from "@/components/ui";

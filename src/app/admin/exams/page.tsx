@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Copy, Edit, Plus, Trash2 } from "lucide-react";
+import { Copy, CreditCard as Edit, Plus, Trash2 } from "lucide-react";
 import { DataTable } from "@/components/data-table";
 import { PageHeader } from "@/components/page-header";
 import { Badge, Button, SearchBar, Select, Tabs } from "@/components/ui";

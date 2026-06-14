@@ -2,16 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import {
-  BookmarkCheck,
-  CheckCircle2,
-  ChevronLeft,
-  ChevronRight,
-  Cloud,
-  Maximize,
-  Send,
-  Wifi
-} from "lucide-react";
+import { BookmarkCheck, CircleCheck as CheckCircle2, ChevronLeft, ChevronRight, Cloud, Maximize, Send, Wifi } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useExamStore } from "@/store/use-exam-store";
 import { Badge, Button, Card, CardContent } from "@/components/ui";

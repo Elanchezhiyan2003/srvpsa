@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Download, Edit, Eye, Filter, Plus, Trash2 } from "lucide-react";
+import { Download, CreditCard as Edit, Eye, ListFilter as Filter, Plus, Trash2 } from "lucide-react";
 import { CsvUploadPreview } from "@/components/forms/student-form";
 import { DataTable } from "@/components/data-table";
 import { PageHeader } from "@/components/page-header";

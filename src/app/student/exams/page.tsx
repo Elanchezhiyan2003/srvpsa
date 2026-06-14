@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Clock, FileQuestion, Medal, PlayCircle } from "lucide-react";
+import { Clock, FileQuestionMark as FileQuestion, Medal, CirclePlay as PlayCircle } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import { Badge, Button, Card, CardContent } from "@/components/ui";
 import { getCurrentStudent, getStudentAssignedExams } from "@/lib/data";

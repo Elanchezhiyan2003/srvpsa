@@ -1,11 +1,4 @@
-import {
-  Activity,
-  BookOpenCheck,
-  CalendarClock,
-  Layers3,
-  Trophy,
-  Users
-} from "lucide-react";
+import { Activity, BookOpenCheck, CalendarClock, Layers as Layers3, Trophy, Users } from "lucide-react";
 import {
   BatchPerformanceChart,
   ChartPanel,

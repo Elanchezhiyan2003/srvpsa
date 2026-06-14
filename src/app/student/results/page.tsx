@@ -1,4 +1,4 @@
-import { Award, CheckCircle2, FileBarChart, XCircle } from "lucide-react";
+import { Award, CircleCheck as CheckCircle2, ChartBar as FileBarChart, Circle as XCircle } from "lucide-react";
 import { ChartPanel, SubjectPerformanceChart } from "@/components/charts";
 import { DataTable } from "@/components/data-table";
 import { PageHeader } from "@/components/page-header";

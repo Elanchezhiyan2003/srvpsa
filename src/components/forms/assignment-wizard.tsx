@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { CheckCircle2, Send } from "lucide-react";
+import { CircleCheck as CheckCircle2, Send } from "lucide-react";
 import { Badge, Button, Card, CardContent, CardHeader, CardTitle, Modal, Select } from "@/components/ui";
 import { createClient } from "@/lib/supabase/client";
 import type { Batch, Exam } from "@/lib/types";

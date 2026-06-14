@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { AlertTriangle, Clock, Medal, PlayCircle } from "lucide-react";
+import { TriangleAlert as AlertTriangle, Clock, Medal, CirclePlay as PlayCircle } from "lucide-react";
 import { getActiveExam } from "@/lib/data";
 import { PageHeader } from "@/components/page-header";
 import { Button, Card, CardContent, CardHeader, CardTitle } from "@/components/ui";

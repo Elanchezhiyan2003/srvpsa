@@ -1,4 +1,4 @@
-import { Download, FileBarChart } from "lucide-react";
+import { Download, ChartBar as FileBarChart } from "lucide-react";
 import {
   BatchPerformanceChart,
   ChartPanel,
