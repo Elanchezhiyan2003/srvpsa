@@ -1,0 +1,180 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  SUPER_ADMIN
+  ADMIN
+  STUDENT
+}
+
+enum BatchStatus {
+  UPCOMING
+  ACTIVE
+  COMPLETED
+  ARCHIVED
+}
+
+enum ExamStatus {
+  DRAFT
+  PUBLISHED
+  ACTIVE
+  CLOSED
+}
+
+enum QuestionType {
+  MCQ
+  MSQ
+  TRUE_FALSE
+}
+
+enum AttemptStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  SUBMITTED
+  EVALUATED
+}
+
+model User {
+  id           String        @id @default(cuid())
+  fullName     String
+  email        String        @unique
+  mobile       String?       @unique
+  passwordHash String
+  role         Role
+  isActive     Boolean       @default(true)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  student      Student?
+  activities   ActivityLog[]
+}
+
+model Batch {
+  id          String           @id @default(cuid())
+  name        String
+  description String?
+  startDate   DateTime
+  endDate     DateTime
+  status      BatchStatus      @default(ACTIVE)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  students    Student[]
+  assignments ExamAssignment[]
+
+  @@index([status])
+}
+
+model Student {
+  id          String        @id @default(cuid())
+  userId      String        @unique
+  batchId     String
+  rollNumber  String        @unique
+  joinedAt    DateTime      @default(now())
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  batch       Batch         @relation(fields: [batchId], references: [id])
+  attempts    ExamAttempt[]
+
+  @@index([batchId])
+}
+
+model Exam {
+  id              String           @id @default(cuid())
+  name            String
+  description     String?
+  durationMinutes Int
+  totalMarks      Int
+  passingMarks    Int
+  negativeMarks   Float            @default(0)
+  status          ExamStatus        @default(DRAFT)
+  subject         String
+  publishedAt     DateTime?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  questions       Question[]
+  assignments     ExamAssignment[]
+
+  @@index([status])
+}
+
+model Question {
+  id            String       @id @default(cuid())
+  examId        String
+  type          QuestionType
+  prompt        String
+  subject       String
+  explanation   String?
+  marks         Int          @default(1)
+  order         Int
+  exam          Exam         @relation(fields: [examId], references: [id], onDelete: Cascade)
+  options       Option[]
+  attemptAnswers AttemptAnswer[]
+
+  @@index([examId, order])
+}
+
+model Option {
+  id         String   @id @default(cuid())
+  questionId String
+  label      String
+  value      String
+  isCorrect  Boolean  @default(false)
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+}
+
+model ExamAssignment {
+  id         String        @id @default(cuid())
+  examId     String
+  batchId    String
+  opensAt    DateTime
+  closesAt   DateTime
+  createdAt  DateTime      @default(now())
+  exam       Exam          @relation(fields: [examId], references: [id])
+  batch      Batch         @relation(fields: [batchId], references: [id])
+  attempts   ExamAttempt[]
+
+  @@unique([examId, batchId])
+  @@index([opensAt, closesAt])
+}
+
+model ExamAttempt {
+  id             String           @id @default(cuid())
+  assignmentId   String
+  studentId      String
+  status         AttemptStatus    @default(NOT_STARTED)
+  startedAt      DateTime?
+  submittedAt    DateTime?
+  score          Float            @default(0)
+  percentage     Float            @default(0)
+  rank           Int?
+  passed         Boolean          @default(false)
+  assignment     ExamAssignment   @relation(fields: [assignmentId], references: [id])
+  student        Student          @relation(fields: [studentId], references: [id])
+  answers        AttemptAnswer[]
+
+  @@unique([assignmentId, studentId])
+}
+
+model AttemptAnswer {
+  id          String      @id @default(cuid())
+  attemptId   String
+  questionId  String
+  optionIds   String[]
+  isMarked    Boolean     @default(false)
+  isCorrect   Boolean?
+  attempt     ExamAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  question    Question    @relation(fields: [questionId], references: [id])
+}
+
+model ActivityLog {
+  id        String   @id @default(cuid())
+  actorId   String
+  message   String
+  metadata  Json?
+  createdAt DateTime @default(now())
+  actor     User     @relation(fields: [actorId], references: [id])
+}
